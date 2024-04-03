@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/user/user.entity';
 import { Repository } from 'typeorm';
@@ -17,7 +17,7 @@ export class UserService {
             const userInfo = await this.userEntityRepository.findOneBy({ iduser: id });
             return this.entityToDto(userInfo)
         } catch (error) {
-            throw new NotFoundException(`User not fount`);
+            throw new InternalServerErrorException(`Error list user: ${error.message}`);
         }
     }
 
@@ -27,16 +27,21 @@ export class UserService {
             const update = await this.userEntityRepository.findOneBy({ iduser: id });
             return this.entityToDto(update)
         } catch (error) {
-            throw new NotFoundException(`User not update`);
+            throw new InternalServerErrorException(`Error update user: ${error.message}`);
         }
     }
 
     async delete (id:number){
         try {
-            await this.userEntityRepository.delete(id)
+            const user = await this.userEntityRepository.findOneBy({iduser:id})
+            if(!user){
+                throw new NotFoundException(`User with id ${id} not found`);
+            }
+            user.deletedAt = new Date();
+            await this.userEntityRepository.save(user);
             return {message:"User delete", status:"OK"} 
         } catch (error) {
-            throw new NotFoundException(`User not delete`);
+            throw new InternalServerErrorException(`Error deleting user: ${error.message}`);
         }
     }
 
@@ -44,5 +49,5 @@ export class UserService {
         const { iduser, fullname, age, email, createdAt, updatedAt, deletedAt } = user;
         return { iduser, fullname, age, email, createdAt, updatedAt, deletedAt };
     }
-
+  
 }

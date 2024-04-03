@@ -3,6 +3,7 @@ import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Res, Valid
 import { PostService } from './post.service';
 import { PostDto } from '../post-dto/post-dto';
 
+
 @Controller('post')
 export class PostController {
     constructor(
@@ -30,7 +31,7 @@ export class PostController {
     }
 
     @Put(':id')
-    async update (@Body(new ValidationPipe()) updatePostDto:PostDto, @Res() response, @Param('id') idpost){
+    async update (@Body(new ValidationPipe()) updatePostDto:PostDto, @Res() response, @Param('id') idpost, ){
         try {
             const postUpdate = await this.postService.update(idpost, updatePostDto) ;
             response.status(HttpStatus.OK).json(postUpdate);

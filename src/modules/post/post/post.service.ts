@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostDto } from '../post-dto/post-dto';
@@ -7,18 +7,22 @@ import { PostEntity } from 'src/entities/post/post.entity';
 
 @Injectable()
 export class PostService {
-    constructor(
+    constructor( 
         @InjectRepository(PostEntity)
         private readonly postEntityRepository: Repository<PostEntity>
     ) { }
 
     async create (postDto: PostDto){
-        const post = await this.postEntityRepository.create(postDto);
-        if(!post){
-            throw new NotFoundException('Post not create')
+        try {
+            const post = await this.postEntityRepository.create(postDto);
+            if(!post){
+                throw new InternalServerErrorException(`Error create post: `);
+            }
+            await this.postEntityRepository.save(post);
+            return this.entityToDto(post);
+        } catch (error) {
+            throw new InternalServerErrorException(`Error create post: ${error.message} `)
         }
-        await this.postEntityRepository.save(post);
-        return this.entityToDto(post);
     }
 
     async get (){
@@ -26,7 +30,7 @@ export class PostService {
             const postList = await this.postEntityRepository.find();
             return postList;
         } catch (error) {
-            throw new NotFoundException(`Post not fount`);
+            throw new InternalServerErrorException(`Error list post: ${error.message}`);
         }
     }
 
@@ -36,22 +40,27 @@ export class PostService {
             const update = await this.postEntityRepository.findOneBy({ idpost: id });
             return this.entityToDto(update)
         } catch (error) {
-            throw new NotFoundException(`Post not update`);
+            throw new InternalServerErrorException(`Error update post: ${error.message}`);
         }
     }
 
     async delete (id:number){
         try {
-            await this.postEntityRepository.delete(id)
+            const post = await this.postEntityRepository.findOneBy({idpost:id});
+            if(!post){
+                throw new NotFoundException(`Post with id ${id} not found`);
+            }
+            post.deletedAt = new Date()
+            await this.postEntityRepository.save(post,);
             return {message:"User delete", status:"OK"} 
         } catch (error) {
-            throw new NotFoundException(`Post not delete`);
+            throw new InternalServerErrorException(`Error deleting post: ${error.message}`);
         }
     }
 
-    private entityToDto(post: PostDto) {
-        const { idpost,title,content,id_user} = post;
-        return { idpost,title,content,id_user};
+    private entityToDto(post: PostEntity) {
+        const { idpost,title,content,like,id_user,createdAt,updatedAt,deletedAt} = post;
+        return { idpost,title,content,like,id_user,createdAt,updatedAt,deletedAt};
     }
 
 }
