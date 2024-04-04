@@ -8,27 +8,25 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user/user.entity';
 import { PostEntity } from './entities/post/post.entity';
 import { AuthModule } from './modules/auth/auth.module';
-
-
+import { DB_HOST, DB_USER, DB_PASS, DB_DATABASE } from '../variables';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
+      host: DB_HOST,
       port: 3306,
-      username: 'red',
-      password: 'red123',
-      database: 'Red_Social',
+      username: DB_USER,
+      password: DB_PASS,
+      database: DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-    
     }),
-    TypeOrmModule.forFeature([UserEntity,PostEntity]),
+    TypeOrmModule.forFeature([UserEntity, PostEntity]),
     PostModule,
     UserModule,
-    AuthModule
+    AuthModule,
   ],
 
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
