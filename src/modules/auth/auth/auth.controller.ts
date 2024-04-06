@@ -30,10 +30,14 @@ export class AuthController {
       if (!userCreate) {
         response.status(HttpStatus.FORBIDDEN).json({ error: 'Error al crear' });
       }
-      await this.mailtrapService.emailSendConfirmation(userCreate);
-      response
-        .status(HttpStatus.OK)
-        .json({ userCreate, message: 'Correo de confirmacion enviado' });
+      const send = await this.mailtrapService.sendUserData(userCreate);
+      if (!send) {
+        response.status(HttpStatus.OK).json(userCreate);
+      } else {
+        response
+          .status(HttpStatus.OK)
+          .json({ userCreate, message: 'Correo de confirmacion enviado' });
+      }
     } catch (error) {
       response
         .status(HttpStatus.FORBIDDEN)
